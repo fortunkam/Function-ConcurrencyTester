@@ -8,8 +8,8 @@ resource servicebus 'Microsoft.ServiceBus/namespaces@2021-06-01-preview' = {
   location:'uksouth'
 }
 
-resource myqueue 'Microsoft.ServiceBus/namespaces/queues@2021-06-01-preview' = {
-  name: 'myqueue'
+resource incomingqueue 'Microsoft.ServiceBus/namespaces/queues@2021-06-01-preview' = {
+  name: 'incomingmessages'
   parent: servicebus
   properties: {
     autoDeleteOnIdle: 'P10675199DT2H48M5.4775807S'
@@ -26,9 +26,39 @@ resource myqueue 'Microsoft.ServiceBus/namespaces/queues@2021-06-01-preview' = {
   }
 }
 
-resource queuefunauthrule 'Microsoft.ServiceBus/namespaces/queues/authorizationRules@2021-06-01-preview' = {
-  name: 'funcauthrule'
-  parent: myqueue
+resource processedqueue 'Microsoft.ServiceBus/namespaces/queues@2021-06-01-preview' = {
+  name: 'processedmessages'
+  parent: servicebus
+  properties: {
+    autoDeleteOnIdle: 'P10675199DT2H48M5.4775807S'
+    deadLetteringOnMessageExpiration: true
+    defaultMessageTimeToLive: 'P10675199DT2H48M5.4775807S'
+    duplicateDetectionHistoryTimeWindow: 'PT10M'
+    enableBatchedOperations: false
+    enableExpress: false
+    enablePartitioning: false
+    lockDuration: 'PT5M'
+    maxDeliveryCount: 1
+    requiresDuplicateDetection: false
+    requiresSession: false
+  }
+}
+
+
+resource incomingqueuefunauthrule 'Microsoft.ServiceBus/namespaces/queues/authorizationRules@2021-06-01-preview' = {
+  name: 'incomingfuncauthrule'
+  parent: incomingqueue
+  properties: {
+    rights: [ 
+      'Manage'
+      'Listen'
+      'Send'
+    ]
+  }
+}
+resource processedqueuefunauthrule 'Microsoft.ServiceBus/namespaces/queues/authorizationRules@2021-06-01-preview' = {
+  name: 'processedfuncauthrule'
+  parent: processedqueue
   properties: {
     rights: [ 
       'Manage'
@@ -106,8 +136,12 @@ resource function 'Microsoft.Web/sites@2020-06-01' = {
           value: '~12'
         }
         {
-          name: 'demo1_connection_string'
-          value: 'Endpoint=sb://${servicebus.name}.servicebus.windows.net/;SharedAccessKeyName=${queuefunauthrule.name};SharedAccessKey=${listKeys(queuefunauthrule.id, servicebus.apiVersion).primaryKey}'
+          name: 'incoming_connection_string'
+          value: 'Endpoint=sb://${servicebus.name}.servicebus.windows.net/;SharedAccessKeyName=${incomingqueuefunauthrule.name};SharedAccessKey=${listKeys(incomingqueuefunauthrule.id, servicebus.apiVersion).primaryKey}'
+        }
+        {
+          name: 'processed_connection_string'
+          value: 'Endpoint=sb://${servicebus.name}.servicebus.windows.net/;SharedAccessKeyName=${processedqueuefunauthrule.name};SharedAccessKey=${listKeys(processedqueuefunauthrule.id, servicebus.apiVersion).primaryKey}'
         }
         {
           name: 'LockWait'
