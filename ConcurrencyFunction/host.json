@@ -14,7 +14,7 @@
       "messageHandlerOptions": {
         "autoComplete": false,
         "maxConcurrentCalls": 1,
-        "maxAutoRenewDuration": "00:30:00"
+        "maxAutoRenewDuration": "00:01:00"
       },
       "sessionHandlerOptions": {
         "autoComplete": false,
