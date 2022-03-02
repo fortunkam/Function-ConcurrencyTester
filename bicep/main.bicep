@@ -100,7 +100,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 resource function 'Microsoft.Web/sites@2020-06-01' = {
-  name: 'mfsbfunc'
+  name: 'mfsbfunc1'
   location: location
   kind: 'functionapp'
   properties: {
@@ -145,7 +145,7 @@ resource function 'Microsoft.Web/sites@2020-06-01' = {
         }
         {
           name: 'LockWait'
-          value: '60000'
+          value: '600000'
         }
       ]
     }

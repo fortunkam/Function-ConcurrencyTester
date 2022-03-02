@@ -12,12 +12,12 @@
     "serviceBus": {
       "prefetchCount": 0,
       "messageHandlerOptions": {
-        "autoComplete": false,
+        "autoComplete": true,
         "maxConcurrentCalls": 1,
-        "maxAutoRenewDuration": "00:01:00"
+        "maxAutoRenewDuration": "00:20:00"
       },
       "sessionHandlerOptions": {
-        "autoComplete": false,
+        "autoComplete": true,
         "messageWaitTimeout": "00:00:30",
         "maxAutoRenewDuration": "00:55:00",
         "maxConcurrentSessions": 1

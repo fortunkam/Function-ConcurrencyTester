@@ -16,7 +16,7 @@ var sb = new Azure.Messaging.ServiceBus.ServiceBusClient(connectionString);
 
 var sender = sb.CreateSender(queueName);
 
-for (int i = 1; i <= 20; i++)
+for (int i = 1; i <= 25; i++)
 {
     var messageBody = $"{i}::{Guid.NewGuid().ToString()}";
 

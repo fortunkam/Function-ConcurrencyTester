@@ -25,7 +25,7 @@ namespace ConcurrencyFunction
 
             log.LogInformation($"C# ServiceBus queue trigger function started message: {messageDebug.body} on {messageDebug.machine} with wait of {messageDebug.wait}");
 
-            await messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
+           // await messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
 
 
             ConcurrencyLibrary.ConcurrencyTester.RunTest(body, (int)messageDebug.wait);
