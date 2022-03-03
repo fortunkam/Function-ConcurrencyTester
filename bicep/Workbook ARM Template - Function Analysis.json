@@ -50,12 +50,18 @@
                 "id": "ec7d868b-6be4-4ffb-bbb7-67042467f9ab",
                 "version": "KqlParameterItem/1.0",
                 "name": "BatchId",
-                "type": 1,
+                "type": 2,
                 "isRequired": true,
-                "value": "de977a13-ec45-4923-8c1e-e3ab3287edac",
+                "query": "customEvents \r\n| where name == \"ProcessBatchMessage\"\r\n| extend batch = tostring(customDimensions[\"batch\"]), iterator = toint(tostring(customDimensions[\"iterator\"])), wait = toint(tostring(customDimensions[\"wait\"])), machine = tostring(customDimensions[\"machine\"])\r\n| where machine != \"DESKTOP-U147R1L\"\r\n| order by timestamp\r\n| summarize dcount(iterator) by batch\r\n| take 10\r\n| project batch\r\n",
+                "value": "b8633fa0-074f-4d48-bc29-aeb83a206dae",
+                "typeSettings": {
+                  "additionalResourceOptions": []
+                },
                 "timeContext": {
                   "durationMs": 86400000
-                }
+                },
+                "queryType": 0,
+                "resourceType": "microsoft.insights/components"
               }
             ],
             "style": "pills",
@@ -109,8 +115,27 @@
           "type": 3,
           "content": {
             "version": "KqlItem/1.0",
+            "query": "customEvents\r\n| extend batch = tostring(customDimensions[\"batch\"])\r\n| where batch == \"{BatchId:value}\"\r\n| summarize FirstMessage = min(timestamp), LastMessage = max(timestamp), DiffInMinutes = datetime_diff('Minute', max(timestamp), min(timestamp))",
+            "size": 3,
+            "title": "Batch Timings",
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 0,
+            "resourceType": "microsoft.insights/components",
+            "visualization": "table",
+            "tileSettings": {
+              "showBorder": false
+            }
+          },
+          "name": "query - 7"
+        },
+        {
+          "type": 3,
+          "content": {
+            "version": "KqlItem/1.0",
             "query": "customEvents\r\n| where name == \"ProcessBatchMessage\"\r\n| extend batch = tostring(customDimensions[\"batch\"]), iterator = toint(tostring(customDimensions[\"iterator\"])), wait = toint(tostring(customDimensions[\"wait\"])), machine = tostring(customDimensions[\"machine\"])\r\n| where batch == \"{BatchId:value}\"\r\n| summarize RunCount = count(machine) by machine\r\n| where RunCount > 1",
-            "size": 4,
+            "size": 3,
             "title": "More than one run on a machine",
             "timeContext": {
               "durationMs": 86400000
@@ -125,7 +150,7 @@
           "content": {
             "version": "KqlItem/1.0",
             "query": "customEvents\r\n| where name == \"ProcessBatchMessage\"\r\n| extend batch = tostring(customDimensions[\"batch\"]), iterator = toint(tostring(customDimensions[\"iterator\"])), wait = toint(tostring(customDimensions[\"wait\"])), machine = tostring(customDimensions[\"machine\"])\r\n| where batch == \"{BatchId:value}\"\r\n| join kind=inner (\r\n    customEvents\r\n    | where name == \"ProcessBatchMessage\"\r\n    | extend batch = tostring(customDimensions[\"batch\"]), iterator = toint(tostring(customDimensions[\"iterator\"])), wait = toint(tostring(customDimensions[\"wait\"])), machine = tostring(customDimensions[\"machine\"])\r\n    | where batch == \"{BatchId:value}\"\r\n    | summarize RunCount = count(machine) by machine\r\n    | where RunCount > 1\r\n) on machine\r\n| project timestamp, name, batch, iterator, machine\r\n| order by machine",
-            "size": 4,
+            "size": 3,
             "title": "Machines that process more than one message",
             "timeContext": {
               "durationMs": 86400000
@@ -146,7 +171,28 @@
               "durationMs": 86400000
             },
             "queryType": 0,
-            "resourceType": "microsoft.insights/components"
+            "resourceType": "microsoft.insights/components",
+            "tileSettings": {
+              "showBorder": false,
+              "titleContent": {
+                "columnMatch": "machine",
+                "formatter": 1
+              },
+              "leftContent": {
+                "columnMatch": "iterator",
+                "formatter": 12,
+                "formatOptions": {
+                  "palette": "auto"
+                },
+                "numberFormat": {
+                  "unit": 17,
+                  "options": {
+                    "maximumSignificantDigits": 3,
+                    "maximumFractionDigits": 2
+                  }
+                }
+              }
+            }
           },
           "name": "Incomplete Iterations"
         }

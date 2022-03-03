@@ -1,5 +1,9 @@
 {
   "version": "2.0",
+  "concurrency": {
+    "dynamicConcurrencyEnabled": false,
+    "snapshotPersistenceEnabled": false
+  },
   "logging": {
     "applicationInsights": {
       "samplingSettings": {
@@ -12,20 +16,20 @@
     "serviceBus": {
       "prefetchCount": 0,
       "messageHandlerOptions": {
-        "autoComplete": false,
+        "autoComplete": true,
         "maxConcurrentCalls": 1,
-        "maxAutoRenewDuration": "00:01:00"
+        "maxAutoRenewDuration": "00:55:00"
       },
       "sessionHandlerOptions": {
-        "autoComplete": false,
-        "messageWaitTimeout": "00:00:30",
+        "autoComplete": true,
+        "messageWaitTimeout": "00:20:00",
         "maxAutoRenewDuration": "00:55:00",
         "maxConcurrentSessions": 1
       },
       "batchOptions": {
         "maxMessageCount": 1,
-        "operationTimeout": "00:01:00",
-        "autoComplete": false
+        "operationTimeout": "00:30:00",
+        "autoComplete": true
       }
     }
   }

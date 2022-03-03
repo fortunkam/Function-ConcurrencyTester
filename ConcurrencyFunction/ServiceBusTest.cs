@@ -48,7 +48,7 @@ namespace ConcurrencyFunction
             });
 
 
-            await messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
+            //await messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
 
 
             ConcurrencyLibrary.ConcurrencyTester.RunTest(body, (int)messageDebug.wait);
