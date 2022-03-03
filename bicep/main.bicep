@@ -100,7 +100,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 resource function 'Microsoft.Web/sites@2020-06-01' = {
-  name: 'mfsbfunc'
+  name: 'mfsbfunc1'
   location: location
   kind: 'functionapp'
   properties: {
@@ -125,7 +125,7 @@ resource function 'Microsoft.Web/sites@2020-06-01' = {
         }
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~3'
+          value: '~4'
         }
         {
           name: 'FUNCTIONS_WORKER_RUNTIME'

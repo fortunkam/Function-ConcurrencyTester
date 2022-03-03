@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ServiceBusMessageSender;
 using System;
-
+using System.Text.Json;
 
 var builder = new ConfigurationBuilder();
 builder.AddJsonFile("local.settings.json", optional: true);
@@ -16,9 +17,15 @@ var sb = new Azure.Messaging.ServiceBus.ServiceBusClient(connectionString);
 
 var sender = sb.CreateSender(queueName);
 
-for (int i = 1; i <= 20; i++)
+var batchId = Guid.NewGuid().ToString();
+
+Console.WriteLine(batchId);
+
+
+for (int i = 1; i <= 25; i++)
 {
-    var messageBody = $"{i}::{Guid.NewGuid().ToString()}";
+    LogData data = new(i, batchId);
+    var messageBody = JsonSerializer.Serialize(data);
 
     sender.SendMessageAsync(new Azure.Messaging.ServiceBus.ServiceBusMessage
     {
