@@ -152,3 +152,11 @@ resource function 'Microsoft.Web/sites@2020-06-01' = {
   }
 }
 
+module workbook 'workbook.bicep' = {
+  name: 'workbook'
+  params: {
+    AppInsightsResourceId: appInsights.id
+    location: location
+  }
+}
+
