@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Azure.Messaging.ServiceBus;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Azure.ServiceBus;
-using Microsoft.Azure.ServiceBus.Core;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -24,10 +22,11 @@ namespace ConcurrencyFunction
             this.telemetryClient = new TelemetryClient(telemetryConfiguration);
         }
 
+
         [FunctionName("ServiceBusTest")]
         [return: ServiceBus("processedmessages", Connection = "processed_connection_string")]
-        public async Task<string> Run([ServiceBusTrigger("incomingmessages", Connection = "incoming_connection_string")]Message message, 
-            ILogger log, MessageReceiver messageReceiver)
+        public string Run([ServiceBusTrigger("incomingmessages", Connection = "incoming_connection_string")]ServiceBusReceivedMessage message, 
+            ILogger log)
         {
             var body = System.Text.ASCIIEncoding.ASCII.GetString(message.Body);
             var jsonObj = JsonSerializer.Deserialize<LogData>(body);
@@ -46,10 +45,6 @@ namespace ConcurrencyFunction
                 {"batch",jsonObj.BatchId},
                 {"iterator",jsonObj.Iterator.ToString()},
             });
-
-
-            //await messageReceiver.CompleteAsync(message.SystemProperties.LockToken);
-
 
             ConcurrencyLibrary.ConcurrencyTester.RunTest(body, (int)messageDebug.wait);
 
