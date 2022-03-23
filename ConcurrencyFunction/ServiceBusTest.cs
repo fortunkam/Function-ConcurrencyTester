@@ -6,6 +6,7 @@ using Azure.Messaging.ServiceBus;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -15,11 +16,13 @@ namespace ConcurrencyFunction
 
     public class ServiceBusTest
     {
-        private readonly TelemetryClient telemetryClient;
+        private readonly TelemetryClient _telemetryClient;
+        private readonly IConfiguration _configuration;
 
-        public ServiceBusTest(TelemetryConfiguration telemetryConfiguration)
+        public ServiceBusTest(TelemetryConfiguration telemetryConfiguration, IConfiguration configuration)
         {
-            this.telemetryClient = new TelemetryClient(telemetryConfiguration);
+            this._telemetryClient = new TelemetryClient(telemetryConfiguration);
+            _configuration = configuration;
         }
 
 
@@ -31,17 +34,20 @@ namespace ConcurrencyFunction
             var body = System.Text.ASCIIEncoding.ASCII.GetString(message.Body);
             var jsonObj = JsonSerializer.Deserialize<LogData>(body);
 
+            var lockWait = _configuration.GetValue<int>("LockWait");
+
             dynamic messageDebug = new JObject();
             messageDebug["body"] = body;
             messageDebug["machine"] = Environment.MachineName;
-            messageDebug["wait"] = int.Parse(Environment.GetEnvironmentVariable("LockWait"));
+            messageDebug["wait"] = lockWait;
 
             log.LogInformation($"C# ServiceBus queue trigger function started message: {messageDebug.body} on {messageDebug.machine} with wait of {messageDebug.wait}");
 
-            telemetryClient.TrackEvent("ProcessBatchMessage", new Dictionary<string, string>()
+            
+            _telemetryClient.TrackEvent("ProcessBatchMessage", new Dictionary<string, string>()
             {
                 {"machine",Environment.MachineName},
-                {"wait",Environment.GetEnvironmentVariable("LockWait")},
+                {"wait",lockWait.ToString()},
                 {"batch",jsonObj.BatchId},
                 {"iterator",jsonObj.Iterator.ToString()},
             });
@@ -50,10 +56,10 @@ namespace ConcurrencyFunction
 
             log.LogInformation($"C# ServiceBus queue trigger function completed message: {messageDebug.body} on {messageDebug.machine}");
 
-            telemetryClient.TrackEvent("ProcessBatchMessageComplete", new Dictionary<string, string>()
+            _telemetryClient.TrackEvent("ProcessBatchMessageComplete", new Dictionary<string, string>()
             {
                 {"machine",Environment.MachineName},
-                {"wait",Environment.GetEnvironmentVariable("LockWait")},
+                {"wait",lockWait.ToString()},
                 {"batch",jsonObj.BatchId},
                 {"iterator",jsonObj.Iterator.ToString()},
             });

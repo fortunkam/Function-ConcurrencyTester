@@ -22,7 +22,7 @@ var batchId = Guid.NewGuid().ToString();
 Console.WriteLine(batchId);
 
 
-for (int i = 1; i <= 25; i++)
+for (int i = 1; i <= 1; i++)
 {
     LogData data = new(i, batchId);
     var messageBody = JsonSerializer.Serialize(data);
