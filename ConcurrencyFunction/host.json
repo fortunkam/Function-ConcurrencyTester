@@ -19,8 +19,7 @@
       "autoCompleteMessages": true,
       "maxAutoLockRenewalDuration": "00:55:00",
       "maxConcurrentCalls": 1,
-      "maxConcurrentSessions": 1,
-      "maxMessages": 1
+      "maxConcurrentSessions": 1
     }
   }
 }
