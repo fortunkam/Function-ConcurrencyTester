@@ -5,7 +5,7 @@ resource servicebus 'Microsoft.ServiceBus/namespaces@2021-06-01-preview' = {
   sku: {
     name:'Standard'
   }
-  location:'uksouth'
+  location:location
 }
 
 resource incomingqueue 'Microsoft.ServiceBus/namespaces/queues@2021-06-01-preview' = {
@@ -129,11 +129,15 @@ resource function 'Microsoft.Web/sites@2020-06-01' = {
         }
         {
           name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: 'dotnet'
+          value: 'dotnet-isolated'
         }
         {
           name: 'WEBSITE_NODE_DEFAULT_VERSION'
           value: '~12'
+        }
+        {
+          name: 'FUNCTIONS_WORKER_PROCESS_COUNT'
+          value: '5'
         }
         {
           name: 'incoming_connection_string'

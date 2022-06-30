@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -17,50 +17,58 @@ namespace ConcurrencyFunction
     public class ServiceBusTest
     {
         private readonly TelemetryClient _telemetryClient;
+        private readonly ILogger<ServiceBusTest> _logger;
         private readonly IConfiguration _configuration;
 
-        public ServiceBusTest(TelemetryConfiguration telemetryConfiguration, IConfiguration configuration)
+        public ServiceBusTest(TelemetryClient telemetryClient, ILogger<ServiceBusTest> logger, IConfiguration configuration)
         {
-            this._telemetryClient = new TelemetryClient(telemetryConfiguration);
+            _telemetryClient = telemetryClient;
+            _logger = logger;
             _configuration = configuration;
         }
 
 
-        [FunctionName("ServiceBusTest")]
-        [return: ServiceBus("processedmessages", Connection = "processed_connection_string")]
-        public string Run([ServiceBusTrigger("incomingmessages", Connection = "incoming_connection_string")]ServiceBusReceivedMessage message, 
-            ILogger log)
+        [Function("ServiceBusTest")]
+        [ServiceBusOutput("processedmessages", Connection = "processed_connection_string")]
+        public string Run([ServiceBusTrigger("incomingmessages", Connection = "incoming_connection_string")]string message)
         {
-            var body = System.Text.ASCIIEncoding.ASCII.GetString(message.Body);
+            var body = message;
             var jsonObj = JsonSerializer.Deserialize<LogData>(body);
 
             var lockWait = _configuration.GetValue<int>("LockWait");
 
+            var machineName = Environment.MachineName;
+            var processId = Process.GetCurrentProcess().Id.ToString();
+
+
             dynamic messageDebug = new JObject();
             messageDebug["body"] = body;
-            messageDebug["machine"] = Environment.MachineName;
+            messageDebug["machine"] = machineName;
             messageDebug["wait"] = lockWait;
+            messageDebug["process"] = processId;
 
-            log.LogInformation($"C# ServiceBus queue trigger function started message: {messageDebug.body} on {messageDebug.machine} with wait of {messageDebug.wait}");
+            _logger.LogInformation($"C# ServiceBus queue trigger function started message: {messageDebug.body} on {messageDebug.machine} (Process: {messageDebug.process}) with wait of {messageDebug.wait}");
 
             
             _telemetryClient.TrackEvent("ProcessBatchMessage", new Dictionary<string, string>()
             {
-                {"machine",Environment.MachineName},
+                {"machine",machineName},
                 {"wait",lockWait.ToString()},
                 {"batch",jsonObj.BatchId},
+                {"process",  processId},
                 {"iterator",jsonObj.Iterator.ToString()},
             });
 
             ConcurrencyLibrary.ConcurrencyTester.RunTest(body, (int)messageDebug.wait);
 
-            log.LogInformation($"C# ServiceBus queue trigger function completed message: {messageDebug.body} on {messageDebug.machine}");
+            _logger.LogInformation($"C# ServiceBus queue trigger function completed message: {messageDebug.body} on {messageDebug.machine} (Process: {messageDebug.process})");
 
             _telemetryClient.TrackEvent("ProcessBatchMessageComplete", new Dictionary<string, string>()
             {
-                {"machine",Environment.MachineName},
+                {"machine",machineName},
                 {"wait",lockWait.ToString()},
                 {"batch",jsonObj.BatchId},
+                {"process",  processId},
                 {"iterator",jsonObj.Iterator.ToString()},
             });
             return messageDebug.ToString();
